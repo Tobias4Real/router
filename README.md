@@ -13,7 +13,7 @@ Router. The ultimate route finder.
   cargo build
 ```
 
-##Running (On Linux)
+## Running (On Linux)
 ```sh
 # For the release build please run:
 target/release/router
