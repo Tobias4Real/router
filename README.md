@@ -2,7 +2,21 @@
 
 Router. The ultimate route finder.
 
-## Building & Running
+## Buidling
+### Release
 ```sh
-  cargo run
+  cargo build --release
 ```
+
+### Debug
+```sh
+  cargo build
+```
+
+##Running (On Linux)
+```sh
+# For the release build please run:
+target/release/router
+
+# For the debug build please run:
+target/debug/router```
