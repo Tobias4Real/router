@@ -19,4 +19,5 @@ Router. The ultimate route finder.
 target/release/router
 
 # For the debug build please run:
-target/debug/router```
+target/debug/router
+```
