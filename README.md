@@ -2,6 +2,8 @@
 
 Router. The ultimate route finder.
 
+Hint: *If you want to load large map files, it is highly recommended that you use the release build because the debug build is way slower.*
+
 ## Buidling
 ### Release
 ```sh
