@@ -9,6 +9,15 @@ pub enum ArgParseError {
     IllegalArgument(&'static str),
 }
 
+
+pub mod flag {
+    pub type Type = u32;
+
+    pub const SHOW_NAIVE_NODE: Type = 1;
+}
+
+const FLAGS: [(&str, flag::Type); 1] = [("--naive", flag::SHOW_NAIVE_NODE)]; 
+
 impl Display for ArgParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let help = "\nUse --help for more infos and examples.";
@@ -34,6 +43,7 @@ pub struct Args {
     pub query_file: Option<String>,
     pub source_node: Option<i64>,
     pub target_node: Option<i64>,
+    pub flags: flag::Type,
 }
 
 impl Args {
@@ -46,6 +56,7 @@ impl Args {
             query_file: None,
             source_node: None,
             target_node: None,
+            flags: 0,
         }
     }
 
@@ -101,7 +112,16 @@ impl Args {
                     );
                 }
                 _ => {
-                    return Err(ArgParseError::UnknownArgument(arg.clone()));
+                    if !FLAGS
+                    .iter()
+                    .filter(|(str, _)| arg == *str)
+                    .any(|(_, flag)| {
+                        result.flags |= *flag;
+                        true
+                    }) {
+                        return Err(ArgParseError::UnknownArgument(arg.clone()));            
+                    }
+
                 }
             }
         }

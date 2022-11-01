@@ -92,7 +92,7 @@ impl Graph {
     }
 
     pub fn from_file(path: String) -> Graph {
-        let file = File::open(path).unwrap();
+        let file = File::open(path).expect("Couldn't open the graph file. Please check if the path is valid!");
         let mut reader = BufReader::new(file);
 
         let mut node_count: usize = 0;

@@ -10,5 +10,5 @@ Options:
 -que    The query file
 -s      The source node
 -t      The target node
+--naive Search the node also naively
 --help  Help
-

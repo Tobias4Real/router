@@ -33,7 +33,7 @@ impl PartialOrd for State {
 }
 
 pub fn solve_file(graph: &Graph, path: String) -> Result<(), Box<dyn Error>> {
-    let file = File::open(path)?;
+    let file = File::open(path).expect("Couldn't open query file. Please check if the path is correct!");
     let reader = BufReader::new(file);
 
     for line in reader.lines() {

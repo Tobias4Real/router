@@ -44,17 +44,19 @@ fn main() {
         if let (Some(lat), Some(lon)) = (args.lat, args.lon) {
             let coordinates = Coords::deg(lat, lon);
 
-            print!("Finding nearest node (naïve)... ");
-            let now = Instant::now();
-            let nearest = Graph::nearest_node_naive(graph.nodes(), coordinates);
-            println!("{}{}", now.elapsed().as_millis(), "ms".green());
-            println!("Naïve nearest node to {}, {} | [{}] {}.", lat, lon, nearest, graph.node(nearest).unwrap());
+            if (args.flags & args::flag::SHOW_NAIVE_NODE) != 0 {
+                print!("Finding nearest node (naïve)... ");
+                let now = Instant::now();
+                let nearest = Graph::nearest_node_naive(graph.nodes(), coordinates);
+                println!("{}{}", now.elapsed().as_millis(), "ms".green());
+                println!("Naïve nearest node to {}, {}:       [{}] {}.", lat, lon, nearest, graph.node(nearest).unwrap());
+            }
 
             print!("Finding nearest node (QuadTree)... ");
             let now = Instant::now();
             let nearest = tree.nearest_node(graph.nodes(), coordinates);
             println!("{}{}", now.elapsed().as_micros(), "µs".red());
-            println!("Nearest node to {}, {} | [{}] {}.", lat, lon, nearest, graph.node(nearest).unwrap());
+            println!("Nearest node to {}, {}:             [{}] {}.", lat, lon, nearest, graph.node(nearest).unwrap());
         }
 
         if let Some(query) = args.query_file {
