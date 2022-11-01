@@ -102,7 +102,7 @@ impl NodeTree {
                     last_pos = Self::relative_position(coords, *center);
                     node = &next[last_pos];
                     prev_next = Some(next);
-                    tried = [false, false, false, false];
+                    tried = [false; 4];
                 },
                 NodeTree::Leaf { center:_, size:_, nodes } => {
                     if let Some(nodes) = nodes {
