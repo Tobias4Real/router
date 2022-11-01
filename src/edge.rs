@@ -7,14 +7,6 @@ pub struct EdgePath {
     pub path: Vec<Edge>
 }
 
-impl EdgePath {
-    pub fn distance(&self) {
-
-        //self.path.iter().map(|edge| edge.cost).collect()
-    }
-}
-
-
 #[derive(Clone)]
 pub struct Edge {
     pub src: NodeIndex,
@@ -29,6 +21,7 @@ impl Display for Edge {
 }
 
 impl Edge {
+    #[must_use]
     pub fn new(src: NodeIndex, trg: NodeIndex, cost: EdgeCost) -> Self {
         Self { src, trg, cost }
     }

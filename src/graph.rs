@@ -103,7 +103,7 @@ impl Graph {
         let mut is_node_count = true;
         while reader.read_line(&mut line_buf).unwrap() != 0 {
             let buf: &str = &line_buf[0..line_buf.len()-1];
-            if !buf.is_empty() && buf.as_bytes().get(0) != Some(&b'#') {
+            if !buf.is_empty() && buf.as_bytes().first() != Some(&b'#') {
                 if is_node_count {
                     node_count = buf.parse::<usize>().unwrap();
                     is_node_count = false;
@@ -116,8 +116,8 @@ impl Graph {
             line_buf.clear();
         }
 
-        if edge_count <= 0 || node_count <= 0 {
-            panic!("Graph file is incorrect.")
+        if edge_count < 1 || node_count < 1 {
+            panic!("Invalid graph file.")
         }
 
         let mut graph = Self::new(node_count, edge_count);

@@ -28,7 +28,7 @@ impl NodeTree {
     /// München
     /// 48° 8‘ 13.92 N 11° 34‘ 31.8 E
     ///  
-    pub fn subdivide(&mut self, graph_nodes: &Vec<Node>) -> Self {
+    pub fn subdivide(&mut self, graph_nodes: &[Node]) -> Self {
         match self {
             Self::Leaf {center, size, nodes} => {
                     let half_size = *size / 2.0;
@@ -43,7 +43,7 @@ impl NodeTree {
                     let mut split_nodes: [Option<Vec<usize>>; 4] = [None, None, None, None]; 
 
                     if let Some(node_indices) = nodes {
-                        for index in node_indices.to_owned() {
+                        for index in node_indices.iter().copied() {
                             let position = Self::relative_position(graph_nodes[index].coords, *center);
 
                             //TODO: Not optimal to check always for Some / None
@@ -52,7 +52,7 @@ impl NodeTree {
                                     nodes.push(index);
                                 },
                                 None => {
-                                    *nodes = Some(vec![index]);
+                                    split_nodes[position] = Some(vec![index]);
                                 },
                             }
                         }
@@ -60,7 +60,7 @@ impl NodeTree {
 
                     let mut iter = split_nodes.into_iter();
 
-                    let next: [NodeTree; 4] = [
+                    let next: [Self; 4] = [
                         Self::Leaf { center: coords[0], size: half_size, nodes: iter.next().unwrap() },
                         Self::Leaf { center: coords[1], size: half_size, nodes: iter.next().unwrap() },
                         Self::Leaf { center: coords[2], size: half_size, nodes: iter.next().unwrap() },
@@ -87,24 +87,25 @@ impl NodeTree {
         let lat = coord1.lat < coord2.lat;
         let lon = coord1.lon > coord2.lon;
 
-        return lat as usize * 2 + lon as usize;
+        usize::from(lat) * 2 + usize::from(lon)
     }
 
+    #[must_use]
     pub fn nearest_node(&self, graph_nodes: &Vec<Node>, coords: Coords) -> usize {
-        let mut prev_next: Option<&Box<[NodeTree; 4]>> = None;
+        let mut prev_next: Option<&Box<[Self; 4]>> = None;
         let mut node = self;
         let mut last_pos = usize::MAX;
         let mut tried: [bool; 4] = [false; 4];
 
         loop {        
             match node {
-                NodeTree::Node { center, next } => {
+                Self::Node { center, next } => {
                     last_pos = Self::relative_position(coords, *center);
                     node = &next[last_pos];
                     prev_next = Some(next);
                     tried = [false; 4];
                 },
-                NodeTree::Leaf { center:_, size:_, nodes } => {
+                Self::Leaf { center:_, size:_, nodes } => {
                     if let Some(nodes) = nodes {
                         return Graph::nearest_node_naive_indices(graph_nodes, nodes, coords);
                     }
@@ -117,8 +118,8 @@ impl NodeTree {
                     for i in 0..4 {
                         if i != last_pos && !tried[i] {
                             let center = match &prev_next[i] {
-                                NodeTree::Node { center, next: _ } => { center },
-                                NodeTree::Leaf { center, size: _, nodes: _ } => { center }
+                                Self::Node { center, next: _ } => { center },
+                                Self::Leaf { center, size: _, nodes: _ } => { center }
                             };
                            
                             let dist = center.distance_to(&coords);
@@ -149,7 +150,7 @@ impl NodeTree {
         let min_depth = 14;
         let max_leaf_elements = 8; 
 
-        let mut leaf : &mut NodeTree = &mut tree;
+        let mut leaf : &mut Self = &mut tree;
         let mut max_depth = 0;
 
         let mut subdivisions = 0;
@@ -168,11 +169,11 @@ impl NodeTree {
             loop {
                 max_depth = max(max_depth, iy);
                 match leaf {
-                    NodeTree::Node { next, center } => {
+                    Self::Node { next, center } => {
                         leaf = &mut next[Self::relative_position(node.coords, *center)];
                         iy += 1;      
                     },
-                    NodeTree::Leaf { center: _, size: _, nodes }  => {
+                    Self::Leaf { center: _, size: _, nodes }  => {
                         if iy >= min_depth {
                             match nodes {
                                 Some(vector) => {
@@ -215,7 +216,7 @@ mod tests {
     fn position() {
         let node = Node::new(Coords::deg(53.5, 8.48), 0);
 
-        assert_eq!(NodeTree::relative_position(node.coords, Coords::deg(48.81392, 11.34318)), 3);
+        assert_eq!(NodeTree::relative_position(node.coords, Coords::deg(48.81392, 11.34318)), 0);
 
     }
 }    

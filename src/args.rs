@@ -61,10 +61,10 @@ impl Args {
     }
 
     pub fn parse() -> Result<Self, ArgParseError> {
-        let mut iter = env::args().into_iter();
+        let mut iter = env::args();
         let mut result = Self::empty();
         //First argument should be never empty, so unwrap is ok
-        result.cmd = iter.next().unwrap().clone();
+        result.cmd = iter.next().unwrap();
 
         while let Some(arg) = iter.next() {
             match arg.as_str() {
