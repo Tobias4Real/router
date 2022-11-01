@@ -163,9 +163,7 @@ impl Graph {
                     last_edge_cnt = graph.edges.len() as NodeIndex;
 
                     //Set offsets for nodes which have no outgoing edges
-                    for i in last_edge_src+1..edge.src {
-                        graph.nodes[i as usize].offset = last_edge_cnt;
-                    }
+                    (last_edge_src+1..edge.src).map(|i| i as usize).for_each(|i| graph.nodes[i].offset = last_edge_cnt);
 
                     last_edge_src = edge.src;
                 }
