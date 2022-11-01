@@ -39,7 +39,7 @@ fn main() {
         let now = Instant::now();
         println!("{}", "Building nearest data structure... ".yellow());
         let tree = NodeTree::build(graph.nodes());
-        println!("Took {}{}", now.elapsed().as_millis() , "ms".green());
+        println!("Building the data structure took {}{}", now.elapsed().as_millis() , "ms".green());
 
         if let (Some(lat), Some(lon)) = (args.lat, args.lon) {
             let coordinates = Coords::deg(lat, lon);
