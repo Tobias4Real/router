@@ -66,7 +66,6 @@ fn main() {
             println!("\n");
             println!("Calculating the distances took {}{}", now.elapsed().as_millis(), "ms".green());
 
-
         }
 
         if let Some(source) = args.source_node {
