@@ -1,7 +1,7 @@
-Help for router. The ultimate route finder.
+Help for router. The ultimate route finder. Written by Thorben Bernhardt & Tobias Schaberl.
 
 Example:
-./router -graph /home/felix/germany.fmi -lon 9.098 -lat 48.746 -que /home/felix/germany.que -s 638394
+router -graph /home/felix/germany.fmi -lon 9.098 -lat 48.746 -que /home/felix/germany.que -s 638394
 
 Options:
 -lat    The latitude
@@ -9,5 +9,6 @@ Options:
 -graph  The graph file
 -que    The query file
 -s      The source node
+-t      The target node
 --help  Help
 

@@ -1,3 +1,4 @@
+use std::env;
 use std::fmt::{Display, Formatter};
 use std::process::exit;
 
@@ -16,7 +17,7 @@ impl Display for ArgParseError {
                 write!(f, "Error parsing arguments | Missing argument for {}{}", arg, help)
             }
             ArgParseError::UnknownArgument(arg) => {
-                write!(f, "Error parsing arguments | Unknown argument '{}{}'", arg, help)
+                write!(f, "Error parsing arguments | Unknown argument '{}'{}", arg, help)
             }
             ArgParseError::IllegalArgument(err) => {
                 write!(f, "Error parsing arguments | {}{}", err, help)
@@ -32,6 +33,7 @@ pub struct Args {
     pub graph_file: Option<String>,
     pub query_file: Option<String>,
     pub source_node: Option<i64>,
+    pub target_node: Option<i64>,
 }
 
 impl Args {
@@ -42,13 +44,14 @@ impl Args {
             lon: None,
             graph_file: None,
             query_file: None,
-            source_node: None
+            source_node: None,
+            target_node: None,
         }
     }
 
-    pub fn parse(args: Vec<String>) -> Result<Self, ArgParseError> {
+    pub fn parse() -> Result<Self, ArgParseError> {
+        let mut iter = env::args().into_iter();
         let mut result = Self::empty();
-        let mut iter = args.iter();
         //First argument should be never empty, so unwrap is ok
         result.cmd = iter.next().unwrap().clone();
 
@@ -88,6 +91,13 @@ impl Args {
                         iter.next()
                             .ok_or(ArgParseError::MissingArgumentFor("-s"))?
                             .parse::<i64>().map_err(|_| ArgParseError::IllegalArgument("-s: Wrong format. Expected something like '638394'."))?
+                    );
+                },
+                "-t" => {
+                    result.target_node = Some(
+                        iter.next()
+                            .ok_or(ArgParseError::MissingArgumentFor("-t"))?
+                            .parse::<i64>().map_err(|_| ArgParseError::IllegalArgument("-s: Wrong format. Expected something like '8371825'."))?
                     );
                 }
                 _ => {
