@@ -48,7 +48,7 @@ fn main() {
                 print!("Finding nearest node (naïve)... ");
                 let now = Instant::now();
                 let nearest = Graph::nearest_node_naive(graph.nodes(), coordinates);
-                println!("{}{}", now.elapsed().as_millis(), "ms".green());
+                println!("   {}{}", now.elapsed().as_millis(), "ms".green());
                 println!("Naïve nearest node to {}, {}:       [{}] {}.", lat, lon, nearest, graph.node(nearest).unwrap());
             }
 
