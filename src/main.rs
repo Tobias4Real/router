@@ -64,7 +64,7 @@ fn main() {
             println!("Distances:\n");
             router::solve_file(&graph, query).unwrap();
             println!("\n");
-            println!("Building the datastructure took {}{}", now.elapsed().as_millis(), "ms".green());
+            println!("Calculating the distances took {}{}", now.elapsed().as_millis(), "ms".green());
 
 
         }
