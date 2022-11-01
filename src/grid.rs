@@ -6,9 +6,6 @@ use pbr::ProgressBar;
 
 use crate::{node::Node, coords::Coords, graph::Graph};
 
-static TREE_DEPTH: i32 = 17;
-
-
 #[derive(Clone)]
 pub enum NodeTree {
     Leaf {
@@ -97,20 +94,21 @@ impl NodeTree {
         let mut prev_next: Option<&Box<[NodeTree; 4]>> = None;
         let mut node = self;
         let mut last_pos = usize::MAX;
-        let mut i = 0;
-        let mut tried: [bool; 4] = [false, false, false, false];
+        let mut tried: [bool; 4] = [false; 4];
 
         loop {        
-            if let NodeTree::Node { center, next } = node {
-                last_pos = Self::relative_position(coords, *center);
-                node = &next[last_pos];
-                i += 1;    
-                prev_next = Some(next);
-                tried = [false, false, false, false];
-            } else {
-                if i == TREE_DEPTH {
-                    break;
-                } else {
+            match node {
+                NodeTree::Node { center, next } => {
+                    last_pos = Self::relative_position(coords, *center);
+                    node = &next[last_pos];
+                    prev_next = Some(next);
+                    tried = [false, false, false, false];
+                },
+                NodeTree::Leaf { center:_, size:_, nodes } => {
+                    if let Some(nodes) = nodes {
+                        return Graph::nearest_node_naive_indices(graph_nodes, nodes, coords);
+                    }
+
                     let mut lowest_dist = f64::MAX;
                     let mut lowest_index: usize = 0;
 
@@ -118,14 +116,18 @@ impl NodeTree {
 
                     for i in 0..4 {
                         if i != last_pos && !tried[i] {
-                            if let NodeTree::Node { center, next: _ } = &prev_next[i] {
-                                let dist = center.distance_to(&coords);
+                            let center = match &prev_next[i] {
+                                NodeTree::Node { center, next: _ } => { center },
+                                NodeTree::Leaf { center, size: _, nodes: _ } => { center }
+                            };
+                           
+                            let dist = center.distance_to(&coords);
 
-                                if dist < lowest_dist {
-                                    lowest_dist = dist;
-                                    lowest_index = i;
-                                }
+                            if dist < lowest_dist {
+                                lowest_dist = dist;
+                                lowest_index = i;
                             }
+                            
                         }
                     }
 
@@ -135,55 +137,20 @@ impl NodeTree {
                     
                     tried[lowest_index] = true;
                     node = &prev_next[lowest_index];
-                }
-            }
-        }
-
-        match node {
-            NodeTree::Leaf {center: _, size: _, nodes } => {
-
-                if let Some(nodes) = nodes {
-                    return Graph::nearest_node_naive_indices(graph_nodes, nodes, coords);
-                }
-            },
-            _ => {
-                // Can not happen in theory
-                panic!("Error finding nearest node (Not a leaf)");
-            }
-        }
-
-        for i in 0..4 {
-            if i == last_pos {
-                continue;
-            }
-            
-            node = &prev_next.unwrap()[i];
-
-            match node {
-                NodeTree::Leaf {center: _, size: _, nodes } => {
-
-                    if let Some(nodes) = nodes {
-                        return Graph::nearest_node_naive_indices(graph_nodes, nodes, coords);
-                    }
                 },
-                _ => {
-                    // Can not happen in theory
-                    panic!("Error finding nearest node (Not a leaf)");
-                }
             }
         }
-
-        panic!("Error finding nearest node (No nodes found in leaf)");
     }
 
     pub fn build(graph_nodes: &Vec<Node>) -> Self {
         let mut element_count = 0;
         let mut tree = Self::root_leaf();
-        tree.subdivide(graph_nodes);     
+
+        let min_depth = 14;
+        let max_leaf_elements = 8; 
 
         let mut leaf : &mut NodeTree = &mut tree;
         let mut max_depth = 0;
-        let mut max_leaf_size: usize = 0;
 
         let mut subdivisions = 0;
 
@@ -204,16 +171,17 @@ impl NodeTree {
                     NodeTree::Node { next, center } => {
                         leaf = &mut next[Self::relative_position(node.coords, *center)];
                         iy += 1;      
-                        //print!("{} ({:.2}, {:.2} ; {:.2}, {:.2}) ", Self::relative_position(node.coords, *center), node.coords.lat, node.coords.lon, center.lat, center.lon);
                     },
                     NodeTree::Leaf { center: _, size: _, nodes }  => {
-                        if iy == TREE_DEPTH {
+                        if iy >= min_depth {
                             match nodes {
                                 Some(vector) => {
-                                    vector.push(i);
-                                    if vector.len() > max_leaf_size {
-                                        max_leaf_size = vector.len();
+                                    if vector.len() >= max_leaf_elements {
+                                        *leaf = leaf.subdivide(graph_nodes);
+                                        continue;
                                     }
+
+                                    vector.push(i);
                                 },
                                 None => {
                                     *nodes = Some(vec![i]);
@@ -233,23 +201,7 @@ impl NodeTree {
             leaf = &mut tree;
         }
 
-        println!("{}", format!("(d: {}, ec: {}, ml: {}, s: {})", max_depth, element_count, max_leaf_size, subdivisions).magenta());
-
-        /*for i in 0..100 {
-            leaf.subdivide();
-
-
-            match leaf {
-                NodeTree::Node { next } => {
-                    leaf = &mut next[0];
-                },
-                _  => {
-                    panic!("Should be a node")
-                }
-            }
-
-        }*/
-
+        println!("{}", format!("(d: {}, ec: {}, ml: {}, s: {})", max_depth, element_count, max_leaf_elements, subdivisions).magenta());
         tree
     }
 }

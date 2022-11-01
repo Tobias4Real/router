@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 const EARTH_RADIUS: f64 = 6371000.785f64;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Coords {
     pub lat: f64,
     pub lon: f64
