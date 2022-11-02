@@ -5,7 +5,9 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 use owo_colors::OwoColorize;
+use pbr::ProgressBar;
 
 use crate::edge::{EdgeCost};
 use crate::Graph;
@@ -42,10 +44,9 @@ pub fn solve_file(graph: Arc<Graph>, path: String) -> Result<(), Box<dyn Error>>
     let mut handles = Vec::new();
     let lines = reader.lines().into_iter().map(|x| x.unwrap()).collect::<Vec<String>>();
     let line_count = lines.len();
-
     let cpus = min(4, num_cpus::get());
 
-    println!("{}", format!("Calculating distances multi-threaded with {} threads.\nThis may take a while...", cpus).yellow());
+    println!("{}", format!("Calculating distances multi-threaded with {} threads.", cpus).yellow());
 
     let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
     let distances = Arc::new(Mutex::new(distances));
@@ -72,6 +73,17 @@ pub fn solve_file(graph: Arc<Graph>, path: String) -> Result<(), Box<dyn Error>>
         });
 
         handles.push(handle);
+    }
+    let mut pb = ProgressBar::new(line_count as u64);
+    pb.show_speed = false;
+
+
+    let mut progress = 0;
+    while progress < line_count {
+        progress = lines_iter.as_ref().lock().unwrap().1;
+
+        pb.set(progress as u64);
+        thread::sleep(Duration::from_millis(100));
     }
 
     handles.into_iter().for_each(|x| {
