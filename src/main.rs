@@ -6,8 +6,9 @@ pub mod grid;
 pub mod node;
 pub mod router;
 
-use colored::*;
+use owo_colors::OwoColorize;
 use std::process::exit;
+use std::sync::Arc;
 use std::time::Instant;
 use std::{env, io};
 
@@ -82,10 +83,11 @@ fn main() {
 			);
 		}
 
+		let arc = Arc::new(graph);
+
 		if let Some(query) = args.query_file {
 			let now = Instant::now();
-			println!("Distances:\n");
-			router::solve_file(&graph, query).unwrap();
+			router::solve_file(arc.clone(), query).unwrap();
 			println!("\n");
 			println!(
 				"Calculating the distances took {}{}",
@@ -97,7 +99,7 @@ fn main() {
 		if let Some(source) = args.source_node {
 			let now = Instant::now();
 			println!("Running one-to-all dijkstra... ");
-			let paths = router::shortest_paths(&graph, source as usize);
+			let paths = router::shortest_paths(arc.as_ref(), source as usize);
 			println!(
 				"One-to-all dijkstra took {}{}",
 				now.elapsed().as_millis(),

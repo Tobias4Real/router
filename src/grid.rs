@@ -1,7 +1,7 @@
 use core::panic;
 use std::cmp::max;
 
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use pbr::ProgressBar;
 
 use crate::{coords::Coords, graph::Graph, node::Node};

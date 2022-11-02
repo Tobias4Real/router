@@ -1,8 +1,12 @@
-use std::cmp::Ordering;
+use std::cmp::{Ordering, min};
 use std::collections::BinaryHeap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use owo_colors::OwoColorize;
+
 use crate::edge::{EdgeCost};
 use crate::Graph;
 
@@ -32,21 +36,53 @@ impl PartialOrd for State {
     }
 }
 
-pub fn solve_file(graph: &Graph, path: String) -> Result<(), Box<dyn Error>> {
+pub fn solve_file(graph: Arc<Graph>, path: String) -> Result<(), Box<dyn Error>> {
     let file = File::open(path).expect("Couldn't open query file. Please check if the path is correct!");
     let reader = BufReader::new(file);
+    let mut handles = Vec::new();
+    let lines = reader.lines().into_iter().map(|x| x.unwrap()).collect::<Vec<String>>();
+    let line_count = lines.len();
 
-    for line in reader.lines() {
-        let line = line?;
+    let cpus = min(4, num_cpus::get());
 
-        if line.is_empty() {
-            continue;
-        }
+    println!("{}", format!("Calculating distances multi-threaded with {} threads.\nThis may take a while...", cpus).yellow());
 
-        let mut split = line.split(char::is_whitespace);
-        let distance = shortest_path(graph, split.next().unwrap().parse::<usize>()?, split.next().unwrap().parse::<usize>()?);
-        println!("{}", distance);
+    let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
+    let distances = Arc::new(Mutex::new(distances));
+    let lines_iter = Arc::new(Mutex::new((lines.into_iter(), 0)));
+
+    for _ in 0..cpus {
+        let graph = graph.clone();
+        let distances = distances.clone();
+        let lines_iter = lines_iter.clone();
+        let handle = thread::spawn(move || {
+            loop {
+                let mut guard = lines_iter.lock().unwrap();
+                let index = guard.1;
+                guard.1 += 1;
+                if let Some(line) = guard.0.next() {
+                    drop(guard);
+                    let mut split = line.split(char::is_whitespace);
+                    let distance: i64 = shortest_path(&graph, split.next().unwrap().parse::<usize>().unwrap(), split.next().unwrap().parse::<usize>().unwrap());
+                    distances.lock().unwrap()[index] = distance;
+                } else {
+                    break;
+                }
+            }
+        });
+
+        handles.push(handle);
     }
+
+    handles.into_iter().for_each(|x| {
+        x.join().unwrap()
+    });
+
+    println!("\n\n");
+
+    distances.lock().unwrap().iter().for_each(|dist| {
+        println!("{}", *dist);
+    });
 
     Ok(())
 }
@@ -77,7 +113,6 @@ fn dijkstra(graph: &Graph, start: usize, goal: usize,) -> (EdgeCost, Vec<EdgeCos
             }
 
             return (cost, dist);
-            //return Some(path);
         }
 
         if cost > dist[position] {
