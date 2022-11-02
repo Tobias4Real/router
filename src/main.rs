@@ -103,7 +103,7 @@ fn main() {
 			println!("{}", "Running one-to-all dijkstra...".yellow());
 			let paths = router::shortest_paths(arc.as_ref(), source as usize);
 			println!(
-				"The one-to-all dijkstra took {}{}",
+				"The one-to-all dijkstra took {}{}.",
 				now.elapsed().as_millis(),
 				"ms".green()
 			);
