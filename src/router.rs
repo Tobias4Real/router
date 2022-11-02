@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
-use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::sync::{Arc, Mutex};
@@ -38,18 +37,18 @@ impl PartialOrd for State {
     }
 }
 
-pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<(), Box<dyn Error>> {
+pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) {
     let file = File::open(path).expect("Couldn't open query file. Please check if the path is correct!");
     let reader = BufReader::new(file);
     let mut handles = Vec::new();
     let lines = reader.lines().into_iter().map(|x| x.unwrap()).collect::<Vec<String>>();
     let line_count = lines.len();
+    // Fill the distance array with values
     let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
     let distances = Arc::new(Mutex::new(distances));
     let lines_iter = Arc::new(Mutex::new((lines.into_iter(), 0)));
 
     println!("{}", format!("Calculating distances multi-threaded with {} threads...", thread_count).yellow());
-
 
     for _ in 0..thread_count {
         let graph = graph.clone();
@@ -80,22 +79,30 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<
     let mut progress = 0;
     while progress < line_count {
         progress = lines_iter.as_ref().lock().unwrap().1;
+        
+        // Needed because the thread(s) increase the progress counter before they start working on it
+        if progress < thread_count as usize {
+            progress = 0;
+        } else {
+            progress -= thread_count as usize;
+        }
 
         pb.set(progress as u64);
+        // Important to not use the lines_iter mutex too often
         thread::sleep(Duration::from_millis(100));
     }
 
+    // Joining remaining thread(s), should not be necessary
     handles.into_iter().for_each(|x| {
         x.join().unwrap()
     });
     
+    // Write out the distances
     println!("\n\n");
     distances.lock().unwrap().iter().for_each(|dist| {
         println!("{}", *dist);
     });
-    
-    Ok(())
-}
+    }
 
 pub fn shortest_paths(graph: &Graph, start: usize) -> Vec<EdgeCost> {
     dijkstra(graph, start, usize::MAX).1
