@@ -44,6 +44,7 @@ pub struct Args {
     pub source_node: Option<i64>,
     pub target_node: Option<i64>,
     pub flags: flag::Type,
+    pub thread_count: Option<u32>,
 }
 
 impl Args {
@@ -57,6 +58,7 @@ impl Args {
             source_node: None,
             target_node: None,
             flags: 0,
+            thread_count: None,
         }
     }
 
@@ -110,6 +112,13 @@ impl Args {
                             .ok_or(ArgParseError::MissingArgumentFor("-t"))?
                             .parse::<i64>().map_err(|_| ArgParseError::IllegalArgument("-s: Wrong format. Expected something like '8371825'."))?
                     );
+                },
+                "--threads" => {
+                    result.thread_count = Some(
+                        iter.next()
+                            .ok_or(ArgParseError::MissingArgumentFor("--threads"))?
+                            .parse::<u32>().map_err(|_| ArgParseError::IllegalArgument("--threads: Wrong format. Expected something line '12'"))?
+                   );
                 }
                 _ => {
                     if !FLAGS

@@ -1,4 +1,4 @@
-use std::cmp::{Ordering, min};
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::error::Error;
 use std::fs::File;
@@ -38,21 +38,20 @@ impl PartialOrd for State {
     }
 }
 
-pub fn solve_file(graph: Arc<Graph>, path: String) -> Result<(), Box<dyn Error>> {
+pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<(), Box<dyn Error>> {
     let file = File::open(path).expect("Couldn't open query file. Please check if the path is correct!");
     let reader = BufReader::new(file);
     let mut handles = Vec::new();
     let lines = reader.lines().into_iter().map(|x| x.unwrap()).collect::<Vec<String>>();
     let line_count = lines.len();
-    let cpus = min(4, num_cpus::get());
 
-    println!("{}", format!("Calculating distances multi-threaded with {} threads.", cpus).yellow());
+    println!("{}", format!("Calculating distances multi-threaded with {} threads...", thread_count).yellow());
 
     let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
     let distances = Arc::new(Mutex::new(distances));
     let lines_iter = Arc::new(Mutex::new((lines.into_iter(), 0)));
 
-    for _ in 0..cpus {
+    for _ in 0..thread_count {
         let graph = graph.clone();
         let distances = distances.clone();
         let lines_iter = lines_iter.clone();

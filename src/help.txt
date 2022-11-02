@@ -4,11 +4,12 @@ Example:
 router -graph /home/felix/germany.fmi -lon 9.098 -lat 48.746 -que /home/felix/germany.que -s 638394
 
 Options:
--lat    The latitude
--lon    The longitude
--graph  The graph file
--que    The query file
--s      The source node
--t      The target node
---naive Search the node also naively
---help  Help
+-lat        The latitude
+-lon        The longitude
+-graph      The graph file
+-que        The query file
+-s          The source node
+-t          The target node
+--naive     Search the node also naively
+--help      Help
+--threads   The amount of threads to be used for the query file. Default maximal 4.
