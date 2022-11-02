@@ -49,7 +49,7 @@ fn main() {
 		println!("{}", "Building nearest data structure... ".yellow());
 		let tree = NodeTree::build(graph.nodes());
 		println!(
-			"Building the data structure took {}{}",
+			"Building the data structure took {}{}.",
 			now.elapsed().as_millis(),
 			"ms".green()
 		);
@@ -126,7 +126,7 @@ fn main() {
 				dist = -1;
 			}
 
-			println!("Distance to target[{}]: {}", target, dist);
+			println!("Distance to target[{}]: {}.", target, dist);
 		}
 	} else {
 		println!("Nothing to do!");
