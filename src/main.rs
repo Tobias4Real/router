@@ -92,7 +92,7 @@ fn main() {
 			router::solve_file(arc.clone(), thread_count, query).unwrap();
 			println!("\n");
 			println!(
-				"Calculating the distances took {}{}",
+				"Calculating the distances took {}{}.",
 				now.elapsed().as_millis(),
 				"ms".green()
 			);
@@ -100,10 +100,10 @@ fn main() {
 
 		if let Some(source) = args.source_node {
 			let now = Instant::now();
-			println!("Running one-to-all dijkstra... ");
+			println!("{}", "Running one-to-all dijkstra...".yellow());
 			let paths = router::shortest_paths(arc.as_ref(), source as usize);
 			println!(
-				"One-to-all dijkstra took {}{}",
+				"The one-to-all dijkstra took {}{}".,
 				now.elapsed().as_millis(),
 				"ms".green()
 			);
