@@ -44,12 +44,12 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<
     let mut handles = Vec::new();
     let lines = reader.lines().into_iter().map(|x| x.unwrap()).collect::<Vec<String>>();
     let line_count = lines.len();
-
-    println!("{}", format!("Calculating distances multi-threaded with {} threads...", thread_count).yellow());
-
     let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
     let distances = Arc::new(Mutex::new(distances));
     let lines_iter = Arc::new(Mutex::new((lines.into_iter(), 0)));
+
+    println!("{}", format!("Calculating distances multi-threaded with {} threads...", thread_count).yellow());
+
 
     for _ in 0..thread_count {
         let graph = graph.clone();
@@ -63,7 +63,9 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<
                 if let Some(line) = guard.0.next() {
                     drop(guard);
                     let mut split = line.split(char::is_whitespace);
-                    let distance: i64 = shortest_path(&graph, split.next().unwrap().parse::<usize>().unwrap(), split.next().unwrap().parse::<usize>().unwrap());
+                    let start = split.next().unwrap().parse::<usize>().unwrap();
+                    let goal = split.next().unwrap().parse::<usize>().unwrap();
+                    let distance: i64 = shortest_path(&graph, start, goal);
                     distances.lock().unwrap()[index] = distance;
                 } else {
                     break;
@@ -75,8 +77,6 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<
     }
     let mut pb = ProgressBar::new(line_count as u64);
     pb.show_speed = false;
-
-
     let mut progress = 0;
     while progress < line_count {
         progress = lines_iter.as_ref().lock().unwrap().1;
@@ -88,13 +88,12 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) -> Result<
     handles.into_iter().for_each(|x| {
         x.join().unwrap()
     });
-
+    
     println!("\n\n");
-
     distances.lock().unwrap().iter().for_each(|dist| {
         println!("{}", *dist);
     });
-
+    
     Ok(())
 }
 
