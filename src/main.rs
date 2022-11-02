@@ -25,8 +25,6 @@ fn main() {
 	#[cfg(debug_assertions)]
 	println!("{}", "WARNING! The debug build is very slow. Using the release build is highly recommended for large maps.".red());
 
-	let i = 100;
-
 	env::set_var("RUST_LOG", "info");
 	let args = Args::parse()
 		.map_err(|err| {
