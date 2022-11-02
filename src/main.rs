@@ -88,7 +88,7 @@ fn main() {
 
 		if let Some(query) = args.query_file {
 			let now = Instant::now();
-			let thread_count = args.thread_count.unwrap_or(min(num_cpus::get() as u32, 4));
+			let thread_count = args.thread_count.unwrap_or_else(|| min(num_cpus::get() as u32, 4));
 			router::solve_file(arc.clone(), thread_count, query).unwrap();
 			println!("\n");
 			println!(
