@@ -4,7 +4,11 @@ Router. The ultimate route finder.
 
 **IMPORTANT**: If you want to load large map files, it is highly recommended that you use the release build because the debug build is **very** slow.
 
-## Buidling
+## Building
+
+You can install rust [here](https://www.rust-lang.org/tools/install), if it is not already installed. <br>
+**router** was tested to work with rust version 1.65.0.
+
 ### Release
 ```sh
   cargo build --release
@@ -36,7 +40,7 @@ seperated by a space in the middle.
 The queries will be ran multi-threaded using 4 threads or less, depending on the system used.<br>
 **Using more threads increases the system memory usage**.<br>
 Use *'--threads \<number\>'* to specify a concrete number of threads.
-The output is then later printed out line-by-line in the console.<br>
+The output ist then later printed out line-by-line in the console.<br>
 
 Use *'-s \<node id\>'* to specify the node from which the one-to-all dijkstra should be run.<br>
 The target node can be either given as a flag using *'-t \<node id>'* or entered later in the console.
