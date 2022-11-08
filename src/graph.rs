@@ -5,6 +5,7 @@ use crate::Coords;
 use crate::edge::{Edge, EdgeCost};
 use crate::node::{Node, NodeIndex};
 
+const GRAPH_FILE_BUFFER_SIZE: usize = 128;
 
 pub struct Graph {
     nodes: Vec<Node>,
@@ -38,7 +39,6 @@ impl Graph {
         };
 
         let start = self.node(index).unwrap().offset as usize;
-
         if start == NODE_INDEX_MAX_USIZE {
             return &[];
         }
@@ -46,16 +46,14 @@ impl Graph {
         &self.edges[start..end]
     }
 
-    pub fn nearest_node_naive_indices(nodes: &Vec<Node>, indices: &Vec<usize>, coords: Coords) -> usize {
+    pub fn nearest_node_naive_indices(nodes: &Vec<Node>, indices: &[usize], coords: Coords) -> usize {
         if nodes.is_empty() {
             panic!("The graph loaded is empty!")
         }
 
         let mut lowest_dist: f64 = f64::MAX;
         let mut lowest_index = usize::MAX;
-
-        for i in indices {
-            let i = *i;
+        indices.iter().map(|i| *i).for_each(|i| {
             if lowest_index == usize::MAX {
                 lowest_index = i;
             } else {
@@ -65,7 +63,7 @@ impl Graph {
                     lowest_dist = dist;
                 }
             }
-        }
+        });
         lowest_index
     }
 
@@ -76,7 +74,6 @@ impl Graph {
 
         let mut lowest_dist: f64 = f64::MAX;
         let mut lowest_index = usize::MAX;
-
         for (i, node) in nodes.iter().enumerate() {
             if lowest_index == usize::MAX {
                 lowest_index = i;
@@ -94,12 +91,9 @@ impl Graph {
     pub fn from_file(path: String) -> Graph {
         let file = File::open(path).expect("Couldn't open the graph file. Please check if the path is valid!");
         let mut reader = BufReader::new(file);
-
         let mut node_count: usize = 0;
         let mut edge_count: usize = 0;
-
-        let mut line_buf = String::with_capacity(128);
-
+        let mut line_buf = String::with_capacity(GRAPH_FILE_BUFFER_SIZE);
         let mut is_node_count = true;
         while reader.read_line(&mut line_buf).unwrap() != 0 {
             let buf: &str = &line_buf[0..line_buf.len()-1];
@@ -121,15 +115,12 @@ impl Graph {
         }
 
         let mut graph = Self::new(node_count, edge_count);
-
         let mut i: usize = 0;
         let border = ((edge_count + node_count) / 100) as usize;
         let mut pb = ProgressBar::new(100);
         pb.show_speed = false;
-
         let mut last_edge_src = 0;
         let mut last_edge_cnt: NodeIndex = 0;
-
         line_buf.clear();
         while reader.read_line(&mut line_buf).unwrap() != 0 {
             i += 1;
@@ -139,7 +130,6 @@ impl Graph {
 
             //Remove the newline
             let buf: &str = &line_buf[0..line_buf.len() - 1];
-
             if graph.nodes.len() < node_count {
                 let mut node = Node::default();
                 let mut it = buf.split(char::is_whitespace);
@@ -157,7 +147,6 @@ impl Graph {
                 let mut edge = Edge::default();
                 let mut it = buf.split(char::is_whitespace);
                 edge.src = it.next().unwrap().parse::<NodeIndex>().unwrap();
-
                 if last_edge_src != edge.src {
                     graph.nodes[last_edge_src as usize].offset = last_edge_cnt;
                     last_edge_cnt = graph.edges.len() as NodeIndex;
@@ -170,19 +159,15 @@ impl Graph {
 
                 edge.trg = it.next().unwrap().parse::<NodeIndex>().unwrap();
                 edge.cost = it.next().unwrap().parse::<EdgeCost>().unwrap();
-
                 graph.edges.push(edge);
             }
             line_buf.clear();
         }
 
         graph.nodes[last_edge_src as usize].offset = last_edge_cnt;
-
         #[cfg(debug_assertions)]
         graph.nodes.iter().for_each(|node| assert_ne!(node.offset, NodeIndex::MAX));
-
         println!("\nProcessed {} lines, {} / {} edges, {} / {} nodes", i, graph.edges.len(), edge_count, graph.nodes.len(), node_count);
-
         graph
     }
 }

@@ -47,19 +47,19 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) {
     let distances = (0..line_count).map(|_| -1).collect::<Vec<i64>>();
     let distances = Arc::new(Mutex::new(distances));
     let lines_iter = Arc::new(Mutex::new((lines.into_iter(), 0)));
-
     println!("{}", format!("Calculating distances multi-threaded with {} threads...", thread_count).yellow());
 
-    for _ in 0..thread_count {
+    (0..thread_count).for_each(|_| {
         let graph = graph.clone();
         let distances = distances.clone();
-        let lines_iter = lines_iter.clone();
+        let lines_iter = lines_iter.clone();    
         let handle = thread::spawn(move || {
             loop {
                 let mut guard = lines_iter.lock().unwrap();
                 let index = guard.1;
                 guard.1 += 1;
                 if let Some(line) = guard.0.next() {
+                    // Unlock the mutex
                     drop(guard);
                     let mut split = line.split(char::is_whitespace);
                     let start = split.next().unwrap().parse::<usize>().unwrap();
@@ -73,7 +73,8 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) {
         });
 
         handles.push(handle);
-    }
+    });
+    
     let mut pb = ProgressBar::new(line_count as u64);
     pb.show_speed = false;
     let mut progress = 0;
@@ -102,7 +103,7 @@ pub fn solve_file(graph: Arc<Graph>, thread_count: u32, path: String) {
     distances.lock().unwrap().iter().for_each(|dist| {
         println!("{}", *dist);
     });
-    }
+}
 
 pub fn shortest_paths(graph: &Graph, start: usize) -> Vec<EdgeCost> {
     dijkstra(graph, start, usize::MAX).1
@@ -112,23 +113,15 @@ pub fn shortest_path(graph: &Graph, start: usize, goal: usize) -> EdgeCost {
     dijkstra(graph, start, goal).0
 }
 
-fn dijkstra(graph: &Graph, start: usize, goal: usize,) -> (EdgeCost, Vec<EdgeCost>) {
+fn dijkstra(graph: &Graph, start: usize, goal: usize) -> (EdgeCost, Vec<EdgeCost>) {
     let mut heap = BinaryHeap::with_capacity(graph.edge_count());
     let mut dist = (0..graph.node_count()).map(|_| EdgeCost::MAX).collect::<Vec<EdgeCost>>();
-    let mut prev = (0..graph.node_count()).map(|_| usize::MAX).collect::<Vec<usize>>();
 
     dist[start] = 0;
     heap.push(State { cost: 0, position: start });
 
     while let Some(State { cost, position }) = heap.pop() {
         if position == goal {
-            let mut path = Vec::new();
-            let mut previous = position;
-            while previous != start {
-                path.push(previous);
-                previous = prev[previous];
-            }
-
             return (cost, dist);
         }
 
@@ -143,7 +136,6 @@ fn dijkstra(graph: &Graph, start: usize, goal: usize,) -> (EdgeCost, Vec<EdgeCos
             if next.cost < dist[next.position] {
                 heap.push(next);
                 dist[next.position] = next.cost;
-                prev[next.position] = position;
             }
         }
     }
