@@ -1,3 +1,4 @@
+use std::env;
 use std::fmt::{Display, Formatter};
 use std::process::exit;
 
@@ -8,6 +9,15 @@ pub enum ArgParseError {
     IllegalArgument(&'static str),
 }
 
+
+pub mod flag {
+    pub type Type = u32;
+
+    pub const SHOW_NAIVE_NODE: Type = 1;
+}
+
+const FLAGS: [(&str, flag::Type); 1] = [("--naive", flag::SHOW_NAIVE_NODE)]; 
+
 impl Display for ArgParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let help = "\nUse --help for more infos and examples.";
@@ -16,7 +26,7 @@ impl Display for ArgParseError {
                 write!(f, "Error parsing arguments | Missing argument for {}{}", arg, help)
             }
             ArgParseError::UnknownArgument(arg) => {
-                write!(f, "Error parsing arguments | Unknown argument '{}{}'", arg, help)
+                write!(f, "Error parsing arguments | Unknown argument '{}'{}", arg, help)
             }
             ArgParseError::IllegalArgument(err) => {
                 write!(f, "Error parsing arguments | {}{}", err, help)
@@ -32,6 +42,9 @@ pub struct Args {
     pub graph_file: Option<String>,
     pub query_file: Option<String>,
     pub source_node: Option<i64>,
+    pub target_node: Option<i64>,
+    pub flags: flag::Type,
+    pub thread_count: Option<u32>,
 }
 
 impl Args {
@@ -42,15 +55,18 @@ impl Args {
             lon: None,
             graph_file: None,
             query_file: None,
-            source_node: None
+            source_node: None,
+            target_node: None,
+            flags: 0,
+            thread_count: None,
         }
     }
 
-    pub fn parse(args: Vec<String>) -> Result<Self, ArgParseError> {
+    pub fn parse() -> Result<Self, ArgParseError> {
+        let mut iter = env::args();
         let mut result = Self::empty();
-        let mut iter = args.iter();
         //First argument should be never empty, so unwrap is ok
-        result.cmd = iter.next().unwrap().clone();
+        result.cmd = iter.next().unwrap();
 
         while let Some(arg) = iter.next() {
             match arg.as_str() {
@@ -89,9 +105,32 @@ impl Args {
                             .ok_or(ArgParseError::MissingArgumentFor("-s"))?
                             .parse::<i64>().map_err(|_| ArgParseError::IllegalArgument("-s: Wrong format. Expected something like '638394'."))?
                     );
+                },
+                "-t" => {
+                    result.target_node = Some(
+                        iter.next()
+                            .ok_or(ArgParseError::MissingArgumentFor("-t"))?
+                            .parse::<i64>().map_err(|_| ArgParseError::IllegalArgument("-s: Wrong format. Expected something like '8371825'."))?
+                    );
+                },
+                "--threads" => {
+                    result.thread_count = Some(
+                        iter.next()
+                            .ok_or(ArgParseError::MissingArgumentFor("--threads"))?
+                            .parse::<u32>().map_err(|_| ArgParseError::IllegalArgument("--threads: Wrong format. Expected something line '12'"))?
+                   );
                 }
                 _ => {
-                    return Err(ArgParseError::UnknownArgument(arg.clone()));
+                    if !FLAGS
+                    .iter()
+                    .filter(|(str, _)| arg == *str)
+                    .any(|(_, flag)| {
+                        result.flags |= *flag;
+                        true
+                    }) {
+                        return Err(ArgParseError::UnknownArgument(arg.clone()));            
+                    }
+
                 }
             }
         }
