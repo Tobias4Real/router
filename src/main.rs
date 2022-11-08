@@ -129,6 +129,6 @@ fn main() {
 			println!("Distance to target[{}]: {}.", target, dist);
 		}
 	} else {
-		println!("Nothing to do!");
+		println!("Nothing to do!\n Use '--help' for help.");
 	}
 }
