@@ -36,7 +36,7 @@ seperated by a space in the middle.
 The queries will be ran multi-threaded using 4 threads or less, depending on the system used.<br>
 **Using more threads increases the system memory usage**.<br>
 Use *'--threads \<number\>'* to specify a concrete number of threads.
-The output ist then later printed out line-by-line in the console.<br>
+The output is then later printed out line-by-line in the console.<br>
 
 Use *'-s \<node id\>'* to specify the node from which the one-to-all dijkstra should be run.<br>
 The target node can be either given as a flag using *'-t \<node id>'* or entered later in the console.
