@@ -53,7 +53,7 @@ impl Graph {
 
         let mut lowest_dist: f64 = f64::MAX;
         let mut lowest_index = usize::MAX;
-        indices.iter().map(|i| *i).for_each(|i| {
+        indices.iter().copied().for_each(|i| {
             if lowest_index == usize::MAX {
                 lowest_index = i;
             } else {
